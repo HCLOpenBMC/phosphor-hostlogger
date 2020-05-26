@@ -98,6 +98,8 @@ class LogManager
      */
     int rotateLogFiles() const;
 
+    ssize_t hostlogger_socket_path(struct sockaddr_un *sa, const char *id);
+
   private:
     /** @brief Log storage. */
     LogStorage storage_;

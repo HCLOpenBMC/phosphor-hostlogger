@@ -98,6 +98,6 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL(DEBUG, test "x$debug" = "xtrue")
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([hostlogger.service])
+AC_CONFIG_FILES([hostlogger@.service])
 AC_CONFIG_FILES([hostlogger.dreport])
 AC_OUTPUT

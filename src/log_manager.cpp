@@ -35,7 +35,7 @@
 #include <vector>
 
 // Path to the Unix Domain socket file used to read host's logs
-#define HOSTLOG_SOCKET_PATH "\0obmc-console"
+#define HOSTLOG_SOCKET_PATH "obmc-console"
 // Number of connection attempts
 #define HOSTLOG_SOCKET_ATTEMPTS 60
 // Pause between connection attempts in seconds
@@ -55,6 +55,8 @@ LogManager::~LogManager()
 int LogManager::openHostLog()
 {
     int rc;
+    ssize_t length;
+    char* socket_id = NULL;
 
     do
     {
@@ -83,11 +85,22 @@ int LogManager::openHostLog()
 
         sockaddr_un sa = {0};
         sa.sun_family = AF_UNIX;
-        constexpr int min_path =
-            sizeof(HOSTLOG_SOCKET_PATH) < sizeof(sa.sun_path)
-                ? sizeof(HOSTLOG_SOCKET_PATH)
-                : sizeof(sa.sun_path);
-        memcpy(&sa.sun_path, HOSTLOG_SOCKET_PATH, min_path);
+
+	//get socket-id from obmc-console conf
+	socket_id = "host0";
+ 	length = hostlogger_socket_path(&sa, socket_id);
+
+	if (length < 0) 
+	{
+	    rc = errno;
+            if(rc != 0)
+	        fprintf(stderr, "Failed to configure socket: error [%i] %s\n", rc,
+		    strerror(rc));
+	    else
+		fprintf(stderr, "Socket name length exceeds buffer limits \n");
+	
+  	    break;
+        }
 
         // Connect to host's log stream via socket.
         // The owner of the socket (server) is obmc-console service and
@@ -97,9 +110,9 @@ int LogManager::openHostLog()
         for (int attempt = 0; rc != 0 && attempt < HOSTLOG_SOCKET_ATTEMPTS;
              ++attempt)
         {
-            rc = connect(fd_, reinterpret_cast<const sockaddr*>(&sa),
+            rc = connect(fd_, (struct sockaddr *)&sa,
                          sizeof(sa) - sizeof(sa.sun_path) +
-                             sizeof(HOSTLOG_SOCKET_PATH) - 1);
+                             length);
             sleep(HOSTLOG_SOCKET_PAUSE);
         }
         if (rc < 0)
@@ -276,4 +289,32 @@ int LogManager::rotateLogFiles() const
     }
 
     return rc;
+}
+
+ssize_t LogManager::hostlogger_socket_path(struct sockaddr_un *sa, const char *id)
+{
+        char *sun_path;
+        ssize_t rc;
+
+        sun_path = (char *)sa + sizeof(*sa) - sizeof(sa->sun_path);
+
+        if (id) {
+                rc = snprintf(sun_path + 1, sizeof(sa->sun_path) - 1,
+                              HOSTLOG_SOCKET_PATH ".%s", id);
+        } else {
+                rc = snprintf(sun_path + 1, sizeof(sa->sun_path) - 1,
+                              HOSTLOG_SOCKET_PATH);
+        }
+
+        if (rc < 0)
+                return rc;
+
+        if (rc > (sizeof(sa->sun_path) - 1)) {
+                errno = 0;
+                return -1;
+        }
+
+        sun_path[0] = '\0';
+
+        return rc + 1 /* Capture NUL prefix */;
 }

@@ -24,7 +24,7 @@
 #include "log_manager.hpp"
 
 #include <getopt.h>
-
+#include <iostream>
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
@@ -184,7 +184,10 @@ int main(int argc, char* argv[])
     bus.attach_event(eventPtr.get(), SD_EVENT_PRIORITY_NORMAL);
 
     DbusServer dbusMgr(logManager, bus);
-    bus.request_name(HOSTLOGGER_DBUS_IFACE);
+    std::string dbusName = "xyz.openbmc_project.HostLogger";
+    dbusName += argv[1];
+    std::cout << "dbusName is: " << dbusName << std::endl;
+    bus.request_name(dbusName.c_str());
 
     // Initialize D-Bus watcher
     DbusWatcher dbusWatch(logManager, bus);
