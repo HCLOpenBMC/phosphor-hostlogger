@@ -52,11 +52,10 @@ LogManager::~LogManager()
     closeHostLog();
 }
 
-int LogManager::openHostLog()
+int LogManager::openHostLog(std::string hostId)
 {
     int rc;
     ssize_t length;
-    char* socket_id = NULL;
 
     do
     {
@@ -87,8 +86,9 @@ int LogManager::openHostLog()
         sa.sun_family = AF_UNIX;
 
 	//get socket-id from obmc-console conf
-	socket_id = "host0";
- 	length = hostlogger_socket_path(&sa, socket_id);
+	std::string socket_id = "host";
+	socket_id += hostId;
+ 	length = hostlogger_socket_path(&sa, socket_id.c_str());
 
 	if (length < 0) 
 	{

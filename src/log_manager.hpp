@@ -39,7 +39,7 @@ class LogManager
      *
      *  @return error code, 0 if operation completed successfully
      */
-    int openHostLog();
+    int openHostLog(std::string hostId);
 
     /** @brief Close the host's log stream.
      */

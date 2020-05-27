@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+std::string hostId = "0";
 // Global logger configuration instance
 Config loggerConfig = {.path = LOG_OUTPUT_PATH,
                        .storageSizeLimit = LOG_STORAGE_SIZE_LIMIT,
@@ -98,6 +99,10 @@ static int getNumericArg(const char* param, const char* arg)
 int main(int argc, char* argv[])
 {
     int opt_val;
+    if(argc > 1)
+    {
+	hostId = argv[1]; 
+    }
     // clang-format off
     const struct option opts[] = {
         { "path",    required_argument, 0, 'p' },
@@ -167,7 +172,7 @@ int main(int argc, char* argv[])
 
     // Initialize log manager
     LogManager logManager;
-    rc = logManager.openHostLog();
+    rc = logManager.openHostLog(hostId);
     if (rc != 0)
         return rc;
 
