@@ -98,6 +98,7 @@ static int getNumericArg(const char* param, const char* arg)
 /** @brief Application entry point. */
 int main(int argc, char* argv[])
 {
+    std::cout << "Main -----> Entered " << std::endl;
     int opt_val;
     if(argc > 1)
     {
@@ -173,6 +174,7 @@ int main(int argc, char* argv[])
     // Initialize log manager
     LogManager logManager;
     rc = logManager.openHostLog(hostId);
+    std::cout << "openhostlog -----> returned " << std::endl;
     if (rc != 0)
         return rc;
 
@@ -188,22 +190,36 @@ int main(int argc, char* argv[])
     EventPtr eventPtr(event);
     bus.attach_event(eventPtr.get(), SD_EVENT_PRIORITY_NORMAL);
 
+    std::cout << "dbus server -----> Initialized " << std::endl;
     DbusServer dbusMgr(logManager, bus);
     std::string dbusName = "xyz.openbmc_project.HostLogger";
-    dbusName += argv[1];
+    
+    if(argc > 1)
+    {   
+        dbusName += argv[1];
+    }
+    else
+    {
+        dbusName += hostId;
+    }
+
     std::cout << "dbusName is: " << dbusName << std::endl;
     bus.request_name(dbusName.c_str());
+    std::cout << "dbus request_name" << std::endl;
 
     // Initialize D-Bus watcher
     DbusWatcher dbusWatch(logManager, bus);
     rc = dbusWatch.initialize();
     if (rc < 0)
         return EXIT_FAILURE;
-
+    std::cout << "dbuswatch ------> Initialized" << std::endl;
     // D-Bus event processing
     rc = sd_event_loop(eventPtr.get());
+    std::cout << "sd_event_loop rc value: %i \n" << rc << std::endl;
+
     if (rc != 0)
         fprintf(stderr, "Error occurred during the sd_event_loop: %i\n", rc);
+    std::cout << "dbus event ------> processed " << std::endl;
 
     return rc ? rc : -1; // Allways retrun an error code
 }

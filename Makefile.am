@@ -34,6 +34,7 @@ CLEANFILES = $(BUILT_SOURCES)
 
 if HAVE_SYSTEMD
 SYSTEMD_UNIT = hostlogger@.service
+SYSTEMD_UNIT += hostlogger.service
 systemdsystemunit_DATA = $(SYSTEMD_UNIT)
 CLEANFILES += $(SYSTEMD_UNIT)
 endif  # HAVE_SYSTEMD
